@@ -1,0 +1,6 @@
+# Dependências de treino (Sprint 2) — além de requirements.txt (Sprint 1).
+# Versões testadas nesta máquina (CPU) em 2026-09-23. O Kaggle já vem com PyTorch+CUDA
+# pré-instalado — normalmente não é preciso reinstalar lá, só conferir a versão com
+# `import torch; print(torch.__version__)` e ajustar aqui se quiser reproduzir exatamente.
+torch==2.14.0
+torchvision==0.29.0

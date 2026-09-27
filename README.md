@@ -59,12 +59,41 @@ python scripts/prepare_ddi.py
 3. Baixe e extraia em `data/raw/ddi/` (esperado: `ddi_metadata.csv` + `images/`)
 4. Rode `python scripts/prepare_ddi.py`
 
+## Sprint 2 — Setup do ambiente e treinamento do modelo base
+
+| Task | Entregável |
+|---|---|
+| TCC-04 — Treino do modelo base | [`notebooks/02_train_baseline.ipynb`](notebooks/02_train_baseline.ipynb) |
+| Dataset PyTorch reutilizável | [`scripts/torch_dataset.py`](scripts/torch_dataset.py) |
+
+**Framework:** PyTorch. **Ambiente de treino:** esta máquina não tem GPU dedicada (só placa
+integrada), então o treino de verdade roda no **Kaggle Notebooks** (GPU gratuita). O notebook
+detecta o ambiente sozinho (`IS_KAGGLE`): local roda só um smoke test (amostra pequena, CPU,
+1 época — prova que o pipeline não tem bug antes de gastar cota de GPU); no Kaggle roda o
+treino real.
+
+**Histórico do treino:** a v1 (5 cópias fixas de cada melanoma vindas da Sprint 1, sem early
+stopping) deu recall de mel = 0,58 no teste, AUC de validação 0,89 e overfitting claro
+(recall de treino 0,99 vs 0,5 na validação). A v2 usa só imagens originais + augmentation
+aleatório a cada época, early stopping pela AUC de validação e limiar de decisão escolhido na
+validação com meta de sensibilidade.
+
+### Como rodar no Kaggle
+
+1. O Kaggle já vem com PyTorch+GPU (`requirements-train.txt` documenta as versões usadas local).
+2. Suba `data/processed/` (pasta `images_224/` + `preprocessed_manifest.csv` +
+   `split_index.csv`) como um Kaggle Dataset privado.
+3. Crie um notebook, anexe o dataset, ative GPU e Internet (exige celular verificado na conta).
+4. Copie as células de `notebooks/02_train_baseline.ipynb`; na Célula 1, no lugar do import,
+   cole o conteúdo de `scripts/torch_dataset.py` (import relativo não funciona lá) e ajuste o
+   caminho `KAGGLE_PROCESSED` na célula de dados para o seu dataset.
+
 ## Estrutura
 
 ```
 data/raw/ham10000/     metadados + imagens originais do HAM10000 (gitignored)
 data/raw/ddi/           metadados + imagens do DDI, após você baixar manualmente (gitignored)
-data/processed/         imagens redimensionadas, manifesto e índice de split (gitignored)
-notebooks/               EDA (TCC-01)
-scripts/                 pré-processamento (TCC-02), split (TCC-03) e preparação do DDI
+data/processed/         imagens redimensionadas, manifesto, índice de split e checkpoints (gitignored)
+notebooks/               EDA (TCC-01) e treino do modelo base (TCC-04)
+scripts/                 pré-processamento (TCC-02), split (TCC-03), preparação do DDI e dataset PyTorch (TCC-04)
 ```
