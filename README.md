@@ -25,7 +25,7 @@ do projeto.
 | TCC-01 — EDA | [`notebooks/01_eda.ipynb`](notebooks/01_eda.ipynb) |
 | TCC-02 — Pré-processamento | [`scripts/preprocess.py`](scripts/preprocess.py) |
 | TCC-03 — Split treino/val/teste | [`scripts/split_dataset.py`](scripts/split_dataset.py) |
-| Preparação do benchmark de fairness | [`scripts/prepare_ddi.py`](scripts/prepare_ddi.py) (pendente: requer registro no DDI, ver abaixo) |
+| Preparação do benchmark de fairness | [`scripts/prepare_ddi.py`](scripts/prepare_ddi.py) (concluído — ver Sprint 3 abaixo) |
 
 ## Como reproduzir
 
@@ -95,12 +95,56 @@ treino real.
    `scripts/torch_dataset.py` (import relativo não funciona lá) e ajuste o caminho
    `KAGGLE_PROCESSED` na célula de dados para o seu dataset.
 
+Checkpoints resultantes (baixados do Kaggle, não vão pro git — ver `.gitignore`):
+`data/processed/model_resnet50_baseline_v2.pt` (referência, recomendado) e `_v3.pt`.
+
+## Sprint 3 — Avaliação de fairness (DDI)
+
+| Task | Entregável |
+|---|---|
+| Avaliação por tom de pele | [`scripts/evaluate_ddi.py`](scripts/evaluate_ddi.py) |
+| Análise controlada por doença | [`scripts/analyze_ddi_by_disease.py`](scripts/analyze_ddi_by_disease.py) |
+
+Roda o checkpoint treinado sobre as 656 imagens do DDI e compara sensibilidade/especificidade/AUC
+entre as 3 faixas de tom de pele, com intervalo de confiança por bootstrap. `CHECKPOINT_VERSION`
+no topo de cada script escolhe qual modelo avaliar (`v2` por padrão).
+
+**Achado central:** a AUC geral cai de 0,92 (HAM10000) para 0,62 (DDI, v2) — sobretudo por troca
+de modalidade (dermatoscopia → foto clínica), não por tom de pele. Uma comparação ingênua por
+faixa parece mostrar viés contra pele escura (AUC 0,49), mas 56% dos casos malignos dessa faixa
+no DDI são linfoma cutâneo (doença nunca vista no treino) — controlando por doença, a diferença
+não se sustenta estatisticamente (só 7 melanomas por faixa no DDI, poder insuficiente).
+
+Tentamos resolver ampliando o treino com o ISIC 2020 (v3, ver Sprint 2 acima): a AUC no HAM10000
+não mudou, e a generalização pro DDI **piorou** (AUC 0,55) — mais dado do mesmo tipo de imagem
+não resolve a troca de modalidade. Por isso o **v2 é o modelo de referência**, não o v3.
+
+```bash
+python scripts/prepare_isic2020.py       # extrai/dedupe o ISIC2020 contra o HAM10000 (opcional, só p/ v3)
+python scripts/build_combined_manifest.py  # gera split_index_combined.csv (opcional, só p/ v3)
+python scripts/evaluate_ddi.py
+python scripts/analyze_ddi_by_disease.py
+```
+
+## Interface de demonstração
+
+```bash
+python scripts/demo_app.py
+```
+Abre em `http://127.0.0.1:7860`. Interface local (Gradio) para testar o classificador com uma
+foto solta na tela ou um dos 6 casos de exemplo em `data/demo_examples/`. Estilo em
+[`scripts/tonare.css`](scripts/tonare.css).
+Requer `data/processed/model_resnet50_baseline_v2.pt` (ver Sprint 2).
+
 ## Estrutura
 
 ```
-data/raw/ham10000/     metadados + imagens originais do HAM10000 (gitignored)
-data/raw/ddi/           metadados + imagens do DDI, após você baixar manualmente (gitignored)
-data/processed/         imagens redimensionadas, manifesto, índice de split e checkpoints (gitignored)
-notebooks/               EDA (TCC-01) e treino do modelo base (TCC-04)
-scripts/                 pré-processamento (TCC-02), split (TCC-03), preparação do DDI e dataset PyTorch (TCC-04)
+data/raw/ham10000/       metadados + imagens originais do HAM10000 (gitignored)
+data/raw/ddi/            metadados + imagens do DDI, após você baixar manualmente (gitignored)
+data/raw/isic2020/       imagens mel/nv extraídas do ISIC2020, dedupe contra o HAM10000 (gitignored)
+data/processed/          imagens redimensionadas, manifestos, índices de split e checkpoints (gitignored)
+data/demo_examples/      6 casos de teste para a interface de demonstração (versionado)
+notebooks/               EDA (TCC-01) e treino do modelo base v2/v3 (TCC-04)
+scripts/                 pré-processamento, split, ISIC2020, DDI, dataset PyTorch, avaliação de
+                         fairness e interface de demonstração
 ```
