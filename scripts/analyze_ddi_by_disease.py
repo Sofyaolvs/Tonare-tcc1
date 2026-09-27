@@ -27,10 +27,9 @@ if sys.stdout.encoding is None or sys.stdout.encoding.lower() != "utf-8":
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PRED_PATH = BASE_DIR / "data" / "processed" / "ddi" / "ddi_predictions.csv"
-CHECKPOINT = BASE_DIR / "data" / "processed" / (
-    "model_resnet50_baseline_v3.pt" if (BASE_DIR / "data" / "processed" / "model_resnet50_baseline_v3.pt").exists()
-    else "model_resnet50_baseline.pt"
-)
+# v2 = referência (recomendada, DDI interpretável); v3 = achado sobre generalização cross-modalidade
+CHECKPOINT_VERSION = "v2"
+CHECKPOINT = BASE_DIR / "data" / "processed" / f"model_resnet50_baseline_{CHECKPOINT_VERSION}.pt"
 OUT_PATH = BASE_DIR / "data" / "processed" / "ddi" / "ddi_by_disease_summary.csv"
 N_BOOT = 2000
 SEED = 42
