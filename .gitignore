@@ -3,9 +3,11 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
-# Dados (grandes, baixados via script — ver scripts/preprocess.py e scripts/prepare_ddi.py)
+# Dados (grandes, baixados via script — ver scripts/preprocess.py, scripts/prepare_ddi.py e scripts/prepare_isic2020.py)
 data/raw/ham10000/
 data/raw/ddi/
+data/raw/isic2020/
+data/processed.zip
 data/processed/
 data/archive_fitzpatrick17k/
 !data/raw/.gitkeep

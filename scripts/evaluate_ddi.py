@@ -32,7 +32,10 @@ if sys.stdout.encoding is None or sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-CHECKPOINT = BASE_DIR / "data" / "processed" / "model_resnet50_baseline.pt"
+CHECKPOINT = BASE_DIR / "data" / "processed" / (
+    "model_resnet50_baseline_v3.pt" if (BASE_DIR / "data" / "processed" / "model_resnet50_baseline_v3.pt").exists()
+    else "model_resnet50_baseline.pt"
+)
 DDI_MANIFEST = BASE_DIR / "data" / "processed" / "ddi" / "ddi_manifest.csv"
 DDI_RAW_META = BASE_DIR / "data" / "raw" / "ddi" / "ddi_metadata.csv"
 PRED_PATH = BASE_DIR / "data" / "processed" / "ddi" / "ddi_predictions.csv"

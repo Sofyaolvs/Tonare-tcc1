@@ -72,21 +72,28 @@ detecta o ambiente sozinho (`IS_KAGGLE`): local roda só um smoke test (amostra 
 1 época — prova que o pipeline não tem bug antes de gastar cota de GPU); no Kaggle roda o
 treino real.
 
-**Histórico do treino:** a v1 (5 cópias fixas de cada melanoma vindas da Sprint 1, sem early
-stopping) deu recall de mel = 0,58 no teste, AUC de validação 0,89 e overfitting claro
-(recall de treino 0,99 vs 0,5 na validação). A v2 usa só imagens originais + augmentation
-aleatório a cada época, early stopping pela AUC de validação e limiar de decisão escolhido na
-validação com meta de sensibilidade.
+**Histórico do treino:**
+- **v1** (5 cópias fixas de cada melanoma vindas da Sprint 1, sem early stopping): recall de mel
+  0,58 no teste, AUC de validação 0,89, overfitting claro (recall de treino 0,99 vs 0,5 na val).
+- **v2** ([`notebooks/02_train_baseline.ipynb`](notebooks/02_train_baseline.ipynb)): só imagens
+  originais + augmentation aleatório a cada época, early stopping pela AUC de validação, limiar
+  escolhido na validação. Resultado: **AUC de teste 0,922**, sensibilidade 0,885 no limiar 0,21.
+- **v3** ([`notebooks/02_train_baseline_v3_combined.ipynb`](notebooks/02_train_baseline_v3_combined.ipynb)):
+  soma o **ISIC 2020** (584 melanomas + 5.193 nevos confirmados, sem duplicata com o HAM10000 —
+  ver [`scripts/prepare_isic2020.py`](scripts/prepare_isic2020.py) e
+  [`scripts/build_combined_manifest.py`](scripts/build_combined_manifest.py)) só no treino/val;
+  o teste do HAM10000 é mantido idêntico ao da v2, de propósito, para isolar o efeito de ter
+  mais dado de treino. Melanoma no treino: 771 → 1.297 imagens.
 
 ### Como rodar no Kaggle
 
 1. O Kaggle já vem com PyTorch+GPU (`requirements-train.txt` documenta as versões usadas local).
-2. Suba `data/processed/` (pasta `images_224/` + `preprocessed_manifest.csv` +
-   `split_index.csv`) como um Kaggle Dataset privado.
+2. Suba `data/processed/` (pasta `images_224/` + `preprocessed_manifest.csv` + `split_index.csv`
+   + `split_index_combined.csv`, se for rodar a v3) como um Kaggle Dataset privado.
 3. Crie um notebook, anexe o dataset, ative GPU e Internet (exige celular verificado na conta).
-4. Copie as células de `notebooks/02_train_baseline.ipynb`; na Célula 1, no lugar do import,
-   cole o conteúdo de `scripts/torch_dataset.py` (import relativo não funciona lá) e ajuste o
-   caminho `KAGGLE_PROCESSED` na célula de dados para o seu dataset.
+4. Copie as células do notebook (v2 ou v3); na Célula 1, no lugar do import, cole o conteúdo de
+   `scripts/torch_dataset.py` (import relativo não funciona lá) e ajuste o caminho
+   `KAGGLE_PROCESSED` na célula de dados para o seu dataset.
 
 ## Estrutura
 
