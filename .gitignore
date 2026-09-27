@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Dados (grandes, baixados via script — ver scripts/preprocess.py e scripts/prepare_ddi.py)
+data/raw/ham10000/
+data/raw/ddi/
+data/processed/
+data/archive_fitzpatrick17k/
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Artefatos de ambiente
+.DS_Store
