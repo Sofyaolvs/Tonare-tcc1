@@ -85,18 +85,37 @@ treino real.
   o teste do HAM10000 é mantido idêntico ao da v2, de propósito, para isolar o efeito de ter
   mais dado de treino. Melanoma no treino: 771 → 1.297 imagens.
 
+- **v4** ([`notebooks/02_train_baseline_v4_milk10k.ipynb`](notebooks/02_train_baseline_v4_milk10k.ipynb)):
+  soma o **MILK10k** (foto clínica + dermatoscopia das mesmas lesões) ao treino, para atacar a troca
+  de modalidade encontrada na Sprint 3. Manifesto em
+  [`scripts/build_milk10k_manifest.py`](scripts/build_milk10k_manifest.py): split por lesão, 30% das
+  lesões reservadas (`test_milk`) para comparar versões em dados inéditos, teste do HAM10000 idêntico
+  ao da v2, lesões do MILK10k parecidas com HAM10000/ISIC2020 descartadas por phash.
+  Melhorou a foto clínica (AUC 0,70 → 0,79 no MILK10k reservado).
+- **v5** ([`notebooks/02_train_baseline_v5_bcn20000.ipynb`](notebooks/02_train_baseline_v5_bcn20000.ipynb)):
+  v4 + **BCN20000** (Hospital Clínic de Barcelona, 10.283 mel/nv de dermatoscopia, ~920 lesões de
+  melanoma; [`scripts/build_v5_manifest.py`](scripts/build_v5_manifest.py), 8 lesões descartadas por
+  phash). Melhorou a dermatoscopia em população real (MSK 2020, AUC 0,67 → 0,76), mas as fotos
+  clínicas caíram para ~4% do treino e o ganho clínico da v4 se perdeu (0,79 → 0,72).
+- **v6** ([`notebooks/02_train_baseline_v6_clinical_oversample.ipynb`](notebooks/02_train_baseline_v6_clinical_oversample.ipynb)):
+  mesmos dados da v5, com as fotos clínicas do MILK10k repetidas 4x no treino (4% → 16%,
+  [`scripts/build_v6_manifest.py`](scripts/build_v6_manifest.py)); o notebook também escolhe limiares
+  por modalidade na validação. Mantém o ganho clínico da v4 e o da v5 em dermatoscopia real
+  (tabela abaixo). **Modelo de referência atual.**
+
 ### Como rodar no Kaggle
 
 1. O Kaggle já vem com PyTorch+GPU (`requirements-train.txt` documenta as versões usadas local).
 2. Suba `data/processed/` (pasta `images_224/` + `preprocessed_manifest.csv` + `split_index.csv`
    + `split_index_combined.csv`, se for rodar a v3) como um Kaggle Dataset privado.
 3. Crie um notebook, anexe o dataset, ative GPU e Internet (exige celular verificado na conta).
-4. Copie as células do notebook (v2 ou v3); na Célula 1, no lugar do import, cole o conteúdo de
+4. Copie as células do notebook (v2 a v6); na Célula 1, no lugar do import, cole o conteúdo de
    `scripts/torch_dataset.py` (import relativo não funciona lá) e ajuste o caminho
    `KAGGLE_PROCESSED` na célula de dados para o seu dataset.
 
 Checkpoints resultantes (baixados do Kaggle, não vão pro git — ver `.gitignore`):
-`data/processed/model_resnet50_baseline_v2.pt` (referência, recomendado) e `_v3.pt`.
+`data/processed/model_resnet50_baseline_v6.pt` (referência atual) e as versões anteriores `_v2.pt` a `_v5.pt`.
+Nomes sempre com a versão no arquivo, de propósito: um checkpoint sem sufixo já foi sobrescrito por engano.
 
 ## Sprint 3 — Avaliação de fairness (DDI)
 
@@ -117,13 +136,77 @@ não se sustenta estatisticamente (só 7 melanomas por faixa no DDI, poder insuf
 
 Tentamos resolver ampliando o treino com o ISIC 2020 (v3, ver Sprint 2 acima): a AUC no HAM10000
 não mudou, e a generalização pro DDI **piorou** (AUC 0,55) — mais dado do mesmo tipo de imagem
-não resolve a troca de modalidade. Por isso o **v2 é o modelo de referência**, não o v3.
+não resolve a troca de modalidade. Por isso, na época, o v2 foi o modelo de referência, não o v3 (a v6 o substituiu — ver abaixo).
+
+### Extensão: avaliação no MILK10k (dermatoscopia vs foto clínica, por tom de pele)
+
+[`scripts/evaluate_milk10k.py`](scripts/evaluate_milk10k.py) usa o [MILK10k](https://api.isic-archive.com/doi/milk10k/)
+(ISIC, CC-BY-NC): cada lesão tem **foto clínica e dermatoscopia**, o que separa o efeito do tipo de
+imagem do efeito do tom de pele (misturados no DDI). Só teste, nada entra no treino. Entram as
+1.196 lesões mel/nv (450 melanomas); tom de pele na escala própria do MILK10k (0 = muito escuro,
+5 = muito claro, não é Fitzpatrick); IC95% por bootstrap de lesões. Download manual dos CSVs/zip em
+`data/raw/milk10k/` (links na página do dataset).
+
+| v2, limiar 0,21 | AUC | Sensibilidade | Especificidade |
+|---|---|---|---|
+| Dermatoscopia (mesmo tipo do treino) | 0,847 | 0,876 | 0,621 |
+| Foto clínica | 0,660 | 0,340 | 0,875 |
+
+- **Dermatoscopia:** sem diferença detectável entre tons (AUC 0,84 escuro / 0,84 médio / 0,87 claro; ICs sobrepostos).
+- **Foto clínica:** a AUC cai ~0,19 e o limiar (escolhido em dermatoscopia) deixa passar 66% dos melanomas, em todos os tons — a queda é de **modalidade**, como suspeitado no DDI.
+- **Ressalva de cobertura:** só 16 melanomas nos tons 0-1; "escuro" aqui é sobretudo o nível 2. Fitzpatrick V-VI praticamente não existe neste dataset.
+
+### Comparação de versões em testes externos (nenhum entra no treino)
+
+Testes: HAM10000 (teste original), 30% das lesões do MILK10k reservadas, PAD-UFES-20 (foto de celular,
+Brasil, 52 imagens de melanoma), HIBA (Buenos Aires, dermatoscopia + foto clínica), MSK 2020 (biópsias
+consecutivas, população de encaminhamento real) e DDI. IC95% por bootstrap de lesão nos CSVs/scripts.
+
+| AUC | v2 | v4 | v5 | **v6** |
+|---|---|---|---|---|
+| HAM10000, dermatoscopia | 0,922 | 0,922 | 0,916 | 0,908 |
+| MILK10k reservado, foto clínica | 0,696 | 0,790 | 0,717 | 0,784 |
+| MILK10k reservado, dermatoscopia | 0,865 | 0,884 | 0,859 | 0,862 |
+| PAD-UFES-20, foto de celular | 0,642 | 0,722 | 0,755 | 0,807 |
+| HIBA, dermatoscopia | 0,895 | 0,895 | 0,912 | 0,918 |
+| HIBA, foto clínica | 0,774 | 0,764 | 0,739 | 0,753 |
+| MSK 2020, população real | 0,653 | 0,665 | 0,764 | 0,790 |
+| DDI (maligno vs benigno) | ~0,62 | 0,662 | 0,667 | 0,660 |
+
+- **O ganho da v6 sobre a v2 é claro** (ex.: MSK 0,65 → 0,79, ICs separados). Entre v5 e v6 as diferenças
+  estão, em vários testes, dentro do intervalo de confiança. A AUC no HAM10000 tem tendência de queda
+  (0,922 → 0,908), dentro do ruído; a sensibilidade no limiar 0,14 do HAM10000 é 0,78 (v2: 0,885).
+- **Foto clínica continua sendo o ponto fraco** (AUC 0,75-0,81). No limiar único 0,14, a v6 dá
+  sensibilidade 0,78-0,88 com especificidade 0,35-0,64 em foto clínica; v4/v5 chegavam a ~0,3 de
+  especificidade. Resultados por limiar e política em `data/processed/threshold_by_modality.csv`
+  ([`scripts/threshold_by_modality.py`](scripts/threshold_by_modality.py)): nenhuma regra de limiar dá
+  sensibilidade e especificidade altas ao mesmo tempo em foto clínica — falta dado clínico.
+- **Tom de pele:** sem diferença sustentada entre tons no MILK10k nem no DDI em nenhuma versão, mas com
+  poucos casos nas faixas escuras. Melanoma em Fitzpatrick V-VI praticamente não existe em nenhum
+  dataset aberto auditado (MILK10k, HIBA, PAD-UFES-20, DDI tem 7 por faixa) — é limitação do TCC.
+- **Meta de "98% de acurácia" não é um objetivo adequado:** com ~86% de nevos no teste, prever sempre
+  "benigno" já dá ~86% de acurácia; resultados ≥98% na literatura costumam vir de vazamento entre
+  treino e teste. Usamos AUC e sensibilidade/especificidade.
+- **Datasets descartados após auditoria (API do ISIC):** coleção "Mel+Nev histopatologia" (294), que repete
+  imagens do HAM10000/ISIC2020/MILK10k sob outros IDs; ISIC 2024 (401 mil recortes, só 157 melanomas);
+  DERM12345 (só 400 melanomas); Fitzpatrick17k, SCIN, BALD.
+
+```bash
+python scripts/evaluate_ham_test.py v6
+python scripts/evaluate_milk10k.py v6 heldout
+python scripts/evaluate_padufes20.py v6
+python scripts/evaluate_external.py v6 hiba251          # imagens: scripts/download_isic_images.py hiba251
+python scripts/evaluate_external.py v6 consec_mel2020_216
+python scripts/evaluate_ddi.py v6
+python scripts/threshold_by_modality.py v4 v5 v6
+```
 
 ```bash
 python scripts/prepare_isic2020.py       # extrai/dedupe o ISIC2020 contra o HAM10000 (opcional, só p/ v3)
 python scripts/build_combined_manifest.py  # gera split_index_combined.csv (opcional, só p/ v3)
-python scripts/evaluate_ddi.py
+python scripts/evaluate_ddi.py          # v2 (padrão); aceita a versão: evaluate_ddi.py v6
 python scripts/analyze_ddi_by_disease.py
+python scripts/evaluate_milk10k.py       # requer data/raw/milk10k/ (ver acima)
 ```
 
 ## Interface de demonstração
@@ -134,7 +217,9 @@ python scripts/demo_app.py
 Abre em `http://127.0.0.1:7860`. Interface local (Gradio) para testar o classificador com uma
 foto solta na tela ou um dos 6 casos de exemplo em `data/demo_examples/`. Estilo em
 [`scripts/tonare.css`](scripts/tonare.css).
-Requer `data/processed/model_resnet50_baseline_v2.pt` (ver Sprint 2).
+Usa `data/processed/model_resnet50_baseline_v6.pt` (versão em `CHECKPOINT_VERSION`, no topo do script; ver Sprint 2).
+Os 6 exemplos são do teste do HAM10000 e foram escolhidos com a v2: com a v6, 4 de 6 estão corretos
+(a v6 deixa passar o caso 3, melanoma com 12,7%, e acerta o caso 5).
 
 ## Estrutura
 
@@ -142,9 +227,12 @@ Requer `data/processed/model_resnet50_baseline_v2.pt` (ver Sprint 2).
 data/raw/ham10000/       metadados + imagens originais do HAM10000 (gitignored)
 data/raw/ddi/            metadados + imagens do DDI, após você baixar manualmente (gitignored)
 data/raw/isic2020/       imagens mel/nv extraídas do ISIC2020, dedupe contra o HAM10000 (gitignored)
+data/raw/milk10k/        MILK10k: zip + CSVs do ISIC (gitignored)
+data/raw/padufes20/      PAD-UFES-20: metadados + imagens mel/nv (gitignored)
+data/raw/candidates/     metadados e imagens do ISIC para BCN20000, HIBA e MSK 2020 (gitignored)
 data/processed/          imagens redimensionadas, manifestos, índices de split e checkpoints (gitignored)
 data/demo_examples/      6 casos de teste para a interface de demonstração (versionado)
-notebooks/               EDA (TCC-01) e treino do modelo base v2/v3 (TCC-04)
+notebooks/               EDA (TCC-01) e treino dos modelos v2 a v6 (TCC-04)
 scripts/                 pré-processamento, split, ISIC2020, DDI, dataset PyTorch, avaliação de
                          fairness e interface de demonstração
 ```
