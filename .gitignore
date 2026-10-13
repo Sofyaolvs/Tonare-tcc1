@@ -7,7 +7,10 @@ __pycache__/
 data/raw/ham10000/
 data/raw/ddi/
 data/raw/isic2020/
-data/processed.zip
+data/raw/milk10k/
+data/raw/padufes20/
+data/raw/candidates/
+data/processed*.zip
 data/processed/
 data/archive_fitzpatrick17k/
 !data/raw/.gitkeep

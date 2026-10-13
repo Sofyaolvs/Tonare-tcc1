@@ -21,7 +21,8 @@ from PIL import Image as PILImage
 from torchvision import models, transforms
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-CHECKPOINT_PATH = BASE_DIR / "data" / "processed" / "model_resnet50_baseline_v2.pt"
+CHECKPOINT_VERSION = "v6"
+CHECKPOINT_PATH = BASE_DIR / "data" / "processed" / f"model_resnet50_baseline_{CHECKPOINT_VERSION}.pt"
 EXAMPLES_DIR = BASE_DIR / "data" / "demo_examples"
 CSS_PATH = Path(__file__).resolve().parent / "tonare.css"
 
