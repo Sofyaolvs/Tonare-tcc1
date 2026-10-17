@@ -10,6 +10,7 @@ data/raw/isic2020/
 data/raw/milk10k/
 data/raw/padufes20/
 data/raw/candidates/
+data/raw/fitzpatrick17k/
 data/processed*.zip
 data/processed/
 data/archive_fitzpatrick17k/
