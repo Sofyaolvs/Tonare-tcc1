@@ -14,7 +14,7 @@ Saídas:
     docs/data/resumo_por_versao_notebook.csv
 
 Uso:
-    python scripts/gerar_graficos_por_versao.py [pasta_dos_notebooks]
+    python scripts/gerar_graficos_por_versao.py [pasta_dos_notebooks]   # padrão: notebooks/kaggle_executados
 """
 
 from __future__ import annotations
@@ -41,19 +41,20 @@ if sys.stdout.encoding is None or sys.stdout.encoding.lower() != "utf-8":
 BASE = Path(__file__).resolve().parent.parent
 PROC = BASE / "data" / "processed"
 DOCS = BASE / "docs"
-NB_DIR = Path(sys.argv[1]) if len(sys.argv) > 1 else Path.home() / "Downloads"
+NB_DIR = Path(sys.argv[1]) if len(sys.argv) > 1 else BASE / "notebooks" / "kaggle_executados"
 CELULA = (BASE / "scripts" / "celula_graficos_treino.py").read_text(encoding="utf-8")
 MEAN, STD = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
 
-# versão -> (manifesto usado na validação/teste, notebook do Kaggle com o log). Os nomes dos notebooks
-# NÃO seguem a numeração das versões; o mapeamento foi conferido pelo tamanho do treino, AUC e limiar do log.
+# versão -> (manifesto usado na validação/teste, notebook executado no Kaggle com o log). Os notebooks exportados do
+# Kaggle tinham nomes deslocados em relação às versões; as cópias em notebooks/kaggle_executados/ já foram renomeadas
+# conforme a numeração do projeto (mapeamento conferido pelo tamanho do treino, AUC e limiar de cada log).
 VERSOES = {
-    "v2": ("split_index.csv", "tonate-v1.ipynb"),
-    "v3": ("split_index_combined.csv", "tonare-v2.ipynb"),
-    "v4": ("split_index_v4.csv", "tonare-v4 (1).ipynb"),
-    "v5": ("split_index_v5.csv", "tonare-v3.ipynb"),
-    "v6": ("split_index_v6.csv", "tonare-v5.ipynb"),
-    "v7": ("split_index_v7.csv", "tonare-v6.ipynb"),
+    "v2": ("split_index.csv", "tonare_v2_executado.ipynb"),
+    "v3": ("split_index_combined.csv", "tonare_v3_executado.ipynb"),
+    "v4": ("split_index_v4.csv", "tonare_v4_executado.ipynb"),
+    "v5": ("split_index_v5.csv", "tonare_v5_executado.ipynb"),
+    "v6": ("split_index_v6.csv", "tonare_v6_executado.ipynb"),
+    "v7": ("split_index_v7.csv", "tonare_v7_executado.ipynb"),
 }
 LINHA = re.compile(r"\[Estágio (\d)\] época (\d+)/(\d+) \| treino: loss=([\d.]+) auc=([\d.]+) \| "
                    r"val: loss=([\d.]+) auc=([\d.]+) recall_mel@0\.5=([\d.]+)")
@@ -135,6 +136,7 @@ def main() -> None:
         codigo = (CELULA.replace('NOME_VERSAO = None ', f'NOME_VERSAO = "{v}" ')
                   .replace('SAIDA_BASE = "/kaggle/working"', f'SAIDA_BASE = "{destino.as_posix()}"'))
         exec(compile(codigo, f"celula_{v}", "exec"), g)
+        (destino / f"graficos_{v}.zip").unlink(missing_ok=True)  # o zip é só para download no Kaggle; aqui seria duplicata
         resumo = json.loads((destino / f"graficos_{v}" / f"resumo_{v}.json").read_text(encoding="utf-8"))
         resumo_rows.append({"versao": v, "n_val": len(yv), "n_teste": len(yt), "n_mel_teste": int(yt.sum()), "auc_validacao": resumo["auc_validacao"],
                             "auc_teste": resumo["auc_teste"], "limiar": resumo["limiar_escolhido"],
