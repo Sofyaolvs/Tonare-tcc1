@@ -1,0 +1,249 @@
+{
+  "versao": "v6",
+  "auc_validacao": 0.900730483389443,
+  "auc_teste": 0.9075167256985438,
+  "auc_teste_ic95_bootstrap_de_imagem": [
+    0.8856008018503084,
+    0.9292272038835746
+  ],
+  "limiar_escolhido": 0.14,
+  "teste_no_limiar": {
+    "limiar": 0.14,
+    "sensibilidade": 0.7818181818181819,
+    "especificidade": 0.8231768231768232,
+    "precisao": 0.4215686274509804,
+    "acuracia": 0.8173241852487135,
+    "tp": 129,
+    "fn": 36,
+    "fp": 177,
+    "tn": 824
+  },
+  "teste_em_0_50": {
+    "limiar": 0.5,
+    "sensibilidade": 0.5818181818181818,
+    "especificidade": 0.954045954045954,
+    "precisao": 0.676056338028169,
+    "acuracia": 0.9013722126929674,
+    "tp": 96,
+    "fn": 69,
+    "fp": 46,
+    "tn": 955
+  },
+  "validacao_no_limiar": {
+    "limiar": 0.14,
+    "sensibilidade": 0.9010989010989011,
+    "especificidade": 0.6942196531791908,
+    "precisao": 0.5535864978902953,
+    "acuracia": 0.7554922701383239,
+    "tp": 656,
+    "fn": 72,
+    "fp": 529,
+    "tn": 1201
+  },
+  "prevalencia_melanoma_teste": 0.14150943396226415,
+  "acuracia_sempre_benigno_teste": 0.8584905660377359,
+  "auc_validacao_por_fonte": {
+    "bcn20000 / dermoscopic": {
+      "auc": 0.8718720326700792,
+      "n_mel": 474,
+      "n_nv": 591
+    },
+    "ham10000 / dermoscopic": {
+      "auc": 0.9215834072921353,
+      "n_mel": 166,
+      "n_nv": 991
+    },
+    "milk10k / clinical": {
+      "auc": 0.7143734643734644,
+      "n_mel": 44,
+      "n_nv": 74
+    },
+    "milk10k / dermoscopic": {
+      "auc": 0.8574938574938575,
+      "n_mel": 44,
+      "n_nv": 74
+    }
+  },
+  "limiares_por_modalidade": {
+    "dermoscopic": {
+      "A": 0.14,
+      "B": 0.31
+    },
+    "clinical": {
+      "A": 0.01,
+      "B": 0.31
+    }
+  },
+  "historico": [
+    {
+      "epoca": 1,
+      "estagio": 1,
+      "train_loss": 0.507,
+      "train_auc": 0.83,
+      "train_recall_mel": NaN,
+      "val_loss": 0.443,
+      "val_auc": 0.854,
+      "val_recall_mel": 0.728
+    },
+    {
+      "epoca": 2,
+      "estagio": 1,
+      "train_loss": 0.473,
+      "train_auc": 0.854,
+      "train_recall_mel": NaN,
+      "val_loss": 0.443,
+      "val_auc": 0.856,
+      "val_recall_mel": 0.738
+    },
+    {
+      "epoca": 3,
+      "estagio": 1,
+      "train_loss": 0.471,
+      "train_auc": 0.855,
+      "train_recall_mel": NaN,
+      "val_loss": 0.443,
+      "val_auc": 0.857,
+      "val_recall_mel": 0.735
+    },
+    {
+      "epoca": 4,
+      "estagio": 1,
+      "train_loss": 0.46,
+      "train_auc": 0.863,
+      "train_recall_mel": NaN,
+      "val_loss": 0.442,
+      "val_auc": 0.856,
+      "val_recall_mel": 0.652
+    },
+    {
+      "epoca": 5,
+      "estagio": 1,
+      "train_loss": 0.465,
+      "train_auc": 0.86,
+      "train_recall_mel": NaN,
+      "val_loss": 0.462,
+      "val_auc": 0.853,
+      "val_recall_mel": 0.765
+    },
+    {
+      "epoca": 6,
+      "estagio": 2,
+      "train_loss": 0.447,
+      "train_auc": 0.871,
+      "train_recall_mel": NaN,
+      "val_loss": 0.424,
+      "val_auc": 0.869,
+      "val_recall_mel": 0.739
+    },
+    {
+      "epoca": 7,
+      "estagio": 2,
+      "train_loss": 0.42,
+      "train_auc": 0.886,
+      "train_recall_mel": NaN,
+      "val_loss": 0.405,
+      "val_auc": 0.88,
+      "val_recall_mel": 0.738
+    },
+    {
+      "epoca": 8,
+      "estagio": 2,
+      "train_loss": 0.395,
+      "train_auc": 0.901,
+      "train_recall_mel": NaN,
+      "val_loss": 0.391,
+      "val_auc": 0.885,
+      "val_recall_mel": 0.712
+    },
+    {
+      "epoca": 9,
+      "estagio": 2,
+      "train_loss": 0.377,
+      "train_auc": 0.909,
+      "train_recall_mel": NaN,
+      "val_loss": 0.384,
+      "val_auc": 0.891,
+      "val_recall_mel": 0.698
+    },
+    {
+      "epoca": 10,
+      "estagio": 2,
+      "train_loss": 0.36,
+      "train_auc": 0.918,
+      "train_recall_mel": NaN,
+      "val_loss": 0.383,
+      "val_auc": 0.894,
+      "val_recall_mel": 0.734
+    },
+    {
+      "epoca": 11,
+      "estagio": 2,
+      "train_loss": 0.335,
+      "train_auc": 0.93,
+      "train_recall_mel": NaN,
+      "val_loss": 0.386,
+      "val_auc": 0.894,
+      "val_recall_mel": 0.731
+    },
+    {
+      "epoca": 12,
+      "estagio": 2,
+      "train_loss": 0.325,
+      "train_auc": 0.934,
+      "train_recall_mel": NaN,
+      "val_loss": 0.384,
+      "val_auc": 0.897,
+      "val_recall_mel": 0.753
+    },
+    {
+      "epoca": 13,
+      "estagio": 2,
+      "train_loss": 0.308,
+      "train_auc": 0.941,
+      "train_recall_mel": NaN,
+      "val_loss": 0.388,
+      "val_auc": 0.896,
+      "val_recall_mel": 0.736
+    },
+    {
+      "epoca": 14,
+      "estagio": 2,
+      "train_loss": 0.289,
+      "train_auc": 0.949,
+      "train_recall_mel": NaN,
+      "val_loss": 0.391,
+      "val_auc": 0.897,
+      "val_recall_mel": 0.721
+    },
+    {
+      "epoca": 15,
+      "estagio": 2,
+      "train_loss": 0.273,
+      "train_auc": 0.955,
+      "train_recall_mel": NaN,
+      "val_loss": 0.399,
+      "val_auc": 0.901,
+      "val_recall_mel": 0.791
+    },
+    {
+      "epoca": 16,
+      "estagio": 2,
+      "train_loss": 0.262,
+      "train_auc": 0.958,
+      "train_recall_mel": NaN,
+      "val_loss": 0.398,
+      "val_auc": 0.901,
+      "val_recall_mel": 0.745
+    },
+    {
+      "epoca": 17,
+      "estagio": 2,
+      "train_loss": 0.242,
+      "train_auc": 0.965,
+      "train_recall_mel": NaN,
+      "val_loss": 0.405,
+      "val_auc": 0.898,
+      "val_recall_mel": 0.742
+    }
+  ]
+}

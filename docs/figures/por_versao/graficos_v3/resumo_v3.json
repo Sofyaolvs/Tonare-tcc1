@@ -1,0 +1,59 @@
+{
+  "versao": "v3",
+  "auc_validacao": 0.9360995556395953,
+  "auc_teste": 0.9214603578239942,
+  "auc_teste_ic95_bootstrap_de_imagem": [
+    0.9041251784526027,
+    0.9399636314072675
+  ],
+  "limiar_escolhido": 0.28,
+  "teste_no_limiar": {
+    "limiar": 0.28,
+    "sensibilidade": 0.9272727272727272,
+    "especificidade": 0.7382617382617382,
+    "precisao": 0.3686746987951807,
+    "acuracia": 0.7650085763293311,
+    "tp": 153,
+    "fn": 12,
+    "fp": 262,
+    "tn": 739
+  },
+  "teste_em_0_50": {
+    "limiar": 0.5,
+    "sensibilidade": 0.806060606060606,
+    "especificidade": 0.8361638361638362,
+    "precisao": 0.4478114478114478,
+    "acuracia": 0.8319039451114922,
+    "tp": 133,
+    "fn": 32,
+    "fp": 164,
+    "tn": 837
+  },
+  "validacao_no_limiar": {
+    "limiar": 0.28,
+    "sensibilidade": 0.9017857142857143,
+    "especificidade": 0.7835870284579749,
+    "precisao": 0.3818525519848771,
+    "acuracia": 0.7988472622478386,
+    "tp": 202,
+    "fn": 22,
+    "fp": 327,
+    "tn": 1184
+  },
+  "prevalencia_melanoma_teste": 0.14150943396226415,
+  "acuracia_sempre_benigno_teste": 0.8584905660377359,
+  "auc_validacao_por_fonte": {
+    "ham10000": {
+      "auc": 0.9204527494437893,
+      "n_mel": 166,
+      "n_nv": 991
+    },
+    "isic2020": {
+      "auc": 0.9632625994694961,
+      "n_mel": 58,
+      "n_nv": 520
+    }
+  },
+  "limiares_por_modalidade": null,
+  "historico": []
+}
