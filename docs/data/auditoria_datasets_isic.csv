@@ -1,0 +1,14 @@
+colecao,id_colecao_isic,total_imagens,melanoma,nevo,malignos,clinicas,dermatoscopicas
+HAM10000,212,11720,1305,7737,2156,0,11719
+BCN20000,249,18946,4636,5647,8871,0,18946
+ISIC 2019 (treino),65,25331,4522,12871,8473,0,25331
+ISIC 2020 (treino),70,33126,584,5193,584,0,33126
+"ISIC 2024 (treino, recortes de 3D TBP)",390,401059,157,443,393,0,0
+MILK10k,425,10480,900,1492,7268,5240,5240
+DERM12345,399,12345,400,9952,1167,0,12345
+Melanoma e nevo com histopatologia (colecao 294),294,18133,7191,10826,7202,0,18133
+HIBA (Hospital Italiano de Buenos Aires),251,1616,253,602,751,346,1270
+Biopsias consecutivas 2020 (MSK),216,1295,117,691,148,0,1295
+Newly-acquired and longer-existing,215,187,75,112,75,0,187
+PAD-UFES-20,406,2298,52,244,1089,2298,0
+MSKCC Skin Tone Labeling,413,4879,0,0,0,1201,3678

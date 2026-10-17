@@ -1,0 +1,20 @@
+versao,fonte,imagens_efetivas_por_epoca,imagens_distintas,melanoma_efetivo,nevo_efetivo
+v2,ham10000 (derm.),5355,5355,771,4584
+v3,ham10000 (derm.),5355,5355,771,4584
+v3,isic2020 (derm.),5199,5199,526,4673
+v4,ham10000 (derm.),5355,5355,771,4584
+v4,milk10k (clínica),707,707,267,440
+v4,milk10k (derm.),707,707,267,440
+v5,bcn20000 (derm.),9185,9185,4153,5032
+v5,ham10000 (derm.),5355,5355,771,4584
+v5,milk10k (clínica),707,707,267,440
+v5,milk10k (derm.),707,707,267,440
+v6,bcn20000 (derm.),9185,9185,4153,5032
+v6,ham10000 (derm.),5355,5355,771,4584
+v6,milk10k (clínica),2828,707,1068,1760
+v6,milk10k (derm.),707,707,267,440
+v7,bcn20000 (derm.),9185,9185,4153,5032
+v7,fitzpatrick17k (clínica),1130,565,756,374
+v7,ham10000 (derm.),5355,5355,771,4584
+v7,milk10k (clínica),2828,707,1068,1760
+v7,milk10k (derm.),707,707,267,440

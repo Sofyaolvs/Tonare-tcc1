@@ -3,6 +3,12 @@
 Triagem de **melanoma** por imagem (CNN + transfer learning) com análise de equidade
 (fairness) entre tons de pele.
 
+> **Documentação completa em [`docs/`](docs/README.md):** metodologia, datasets (incluindo a auditoria do arquivo do
+> ISIC e os descartados), histórico das versões v1 a v7, comparação com IC 95% e testes pareados, equidade por tom de
+> pele, limiares e métricas, limitações e como reproduzir — com gráficos e tabelas em CSV.
+> **Modelo de referência atual: v7** (dermatoscopia: AUC 0,923, sensibilidade 0,861, especificidade 0,796).
+> Este README é o guia rápido; os detalhes e o histórico completo estão em `docs/`.
+
 ## Estratégia de dados (v2)
 
 Nenhum dataset público sozinho tem volume grande de melanoma **e** anotação de tom de pele
@@ -255,6 +261,7 @@ data/raw/fitzpatrick17k/ CSV dos autores + imagens extraídas do zip (gitignored
 data/processed/          imagens redimensionadas, manifestos, índices de split e checkpoints (gitignored)
 data/demo_examples/      6 casos de teste para a interface de demonstração (versionado)
 notebooks/               EDA (TCC-01) e treino dos modelos v2 a v7 (TCC-04)
-scripts/                 pré-processamento, split, ISIC2020, DDI, dataset PyTorch, avaliação de
-                         fairness e interface de demonstração
+scripts/                 pré-processamento, split, manifestos v3 a v7, avaliação nos testes externos,
+                         relatório/gráficos da documentação e interface de demonstração
+docs/                    documentação da pesquisa (texto, figures/ e data/): ver docs/README.md
 ```
