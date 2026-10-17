@@ -104,6 +104,11 @@ def load_tests(v: str, model) -> list[tuple[str, str, np.ndarray, np.ndarray, np
     tests.append(("MSK 2020 consecutivas", "dermatoscopia", ms["y"].to_numpy(), ms["score_mel"].to_numpy(), ms["grp"].to_numpy()))
     dd = pd.read_csv(PROC / "ddi" / ("ddi_predictions.csv" if v == "v2" else f"ddi_predictions_{v}.csv"))
     tests.append(("DDI (maligno vs benigno)", "foto clínica", dd["y"].to_numpy(), dd["score_mel"].to_numpy(), np.arange(len(dd))))
+    fzf = PROC / "fitzpatrick17k" / f"fitz17k_{v}.csv"
+    if fzf.exists():  # foto clínica de atlas, só tons V-VI (na v7 são as únicas nunca vistas); melanoma vs nevo
+        fz = pd.read_csv(fzf)
+        fz = fz[(fz["grupo"] == "V-VI") & (fz["label"] != "lentigo maligna")]
+        tests.append(("Fitzpatrick17k V-VI", "foto clínica", fz["y"].to_numpy(), fz["score_mel"].to_numpy(), np.arange(len(fz))))
     return tests
 
 
@@ -112,7 +117,7 @@ def main(versions: list[str]) -> None:
     rows = []
     for v in versions:
         model, thr_global = load_model(v)
-        man = pd.read_csv(PROC / {"v5": "split_index_v5.csv", "v6": "split_index_v6.csv"}.get(v, "split_index_v4.csv"))
+        man = pd.read_csv(PROC / {"v5": "split_index_v5.csv", "v6": "split_index_v6.csv", "v7": "split_index_v7.csv"}.get(v, "split_index_v4.csv"))
         val = man[man["split"] == "val"].reset_index(drop=True)
         print(f"\n##### {v}: limiar único salvo = {thr_global:.2f} | pontuando a validação ({len(val)} imgs)...", flush=True)
         val["score"] = score_paths(model, list(val["path"]))
