@@ -54,20 +54,25 @@ A v6 monta o manifesto na própria Célula 5 a partir do v5; a v7 lê o `split_i
 
 ### Mapeamento dos notebooks do Kaggle
 
-Os **nomes dos notebooks exportados do Kaggle não seguem a numeração das versões**. Mapeamento conferido pelo
-tamanho do treino, AUC e limiar de cada log e pela AUC de validação recalculada a partir de cada checkpoint (bate
-nas 6 versões):
+Os notebooks **exportados do Kaggle** tinham **nomes deslocados em um** em relação às versões (o primeiro se chamava
+`tonate-v1`, mas é a **v2**; a v1 original não tem notebook). Para acabar com a confusão, as **cópias com os nomes
+corretos**, mantendo as saídas (logs de treino), estão em
+[`notebooks/kaggle_executados/`](../notebooks/kaggle_executados/). O conteúdo de cada notebook já usava a numeração
+do projeto (título e nome do checkpoint salvo); só o nome do arquivo estava errado.
 
-| Arquivo exportado do Kaggle | Versão | Como confirmamos |
-|---|---|---|
-| `tonate-v1.ipynb` | **v2** | só HAM10000; treino 5.355; limiar 0,21 |
-| `tonare-v2.ipynb` | **v3** | usa `split_index_combined.csv`; sem saídas salvas |
-| `tonare-v4 (1).ipynb` | **v4** | treino 6.769; limiar 0,22 |
-| `tonare-v3.ipynb` | **v5** | treino 15.954; limiar 0,14 |
-| `tonare-v5.ipynb` | **v6** | treino 18.075; limiar 0,14 |
-| `tonare-v6.ipynb` | **v7** | treino 19.205; limiar 0,15 |
+| Nome original exportado | **Nome correto (neste repositório)** | Versão | Como confirmamos |
+|---|---|---|---|
+| `tonate-v1.ipynb` | `tonare_v2_executado.ipynb` | v2 | só HAM10000; treino 5.355; limiar 0,21 (salvava `model_resnet50_baseline.pt`, sem versão no nome) |
+| `tonare-v2.ipynb` | `tonare_v3_executado.ipynb` | v3 | usa `split_index_combined.csv`; **sem saídas salvas** |
+| `tonare-v4 (1).ipynb` | `tonare_v4_executado.ipynb` | v4 | treino 6.769; limiar 0,22; salva `_v4.pt` |
+| `tonare-v3.ipynb` | `tonare_v5_executado.ipynb` | v5 | treino 15.954; limiar 0,14; salva `_v5.pt` |
+| `tonare-v5.ipynb` | `tonare_v6_executado.ipynb` | v6 | treino 18.075; limiar 0,14; salva `_v6.pt` |
+| `tonare-v6.ipynb` | `tonare_v7_executado.ipynb` | v7 | treino 19.205; limiar 0,15; salva `_v7.pt` |
 
-Os notebooks do repositório (`notebooks/02_train_baseline*.ipynb`) usam a numeração correta.
+A AUC de validação recalculada a partir de cada checkpoint bate com a salva nele nas 6 versões. **Daqui em
+diante, nomeie o notebook no Kaggle com o número da versão do projeto** (ex.: `tonare-v7`) para não repetir o
+problema. Os notebooks "limpos" do repositório (`notebooks/02_train_baseline*.ipynb`, sem saídas) usam a mesma
+numeração.
 
 ## 5. Avaliar (cada versão, nos 8 testes)
 

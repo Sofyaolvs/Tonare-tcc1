@@ -51,5 +51,6 @@ modelo (v1 a v7), comparações, gráficos, limitações e como reproduzir.
 - "**mel**" = melanoma, "**nv**" = nevo melanocítico (a classe negativa do modelo).
 - Os testes externos **nunca** entram no treino de nenhuma versão (exceção documentada: o Fitzpatrick17k na v7,
   ver [05](05-fairness-tom-de-pele.md)).
-- A numeração v1 a v7 é a do projeto. Os **nomes dos notebooks do Kaggle não coincidem** com ela
-  (ver [08](08-reproducao.md#mapeamento-dos-notebooks-do-kaggle)).
+- A numeração v1 a v7 é a do projeto. Os notebooks exportados do Kaggle tinham **nomes deslocados em um**;
+  as cópias já corrigidas estão em `notebooks/kaggle_executados/` (`tonare_v2_executado.ipynb` … `v7`;
+  ver [08](08-reproducao.md#mapeamento-dos-notebooks-do-kaggle)). A **v1 original não tem notebook** (só números).
