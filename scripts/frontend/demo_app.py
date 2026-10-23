@@ -3,10 +3,10 @@ Interface de demonstração do Tonare — pra mostrar ao vivo no pitch.
 
 Implementa a especificação de design fechada com a IA de design (paleta, tipografia,
 layout de 2 colunas, cartão de resultado com barra de probabilidade e marcador de limiar).
-Ver scripts/tonare.css para os tokens e classes.
+Ver scripts/frontend/tonare.css para os tokens e classes.
 
 Uso:
-    python scripts/demo_app.py
+    python scripts/frontend/demo_app.py
 Depois abre http://127.0.0.1:7860 no navegador (o Gradio também tenta abrir sozinho).
 """
 
@@ -21,7 +21,7 @@ import torch.nn.functional as F
 from PIL import Image as PILImage
 from torchvision import models, transforms
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parents[2]
 CHECKPOINT_VERSION = "v7"
 CHECKPOINT_PATH = BASE_DIR / "data" / "processed" / f"model_resnet50_baseline_{CHECKPOINT_VERSION}.pt"
 EXAMPLES_DIR = BASE_DIR / "data" / "demo_examples"

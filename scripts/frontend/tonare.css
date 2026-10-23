@@ -1,7 +1,7 @@
 /*
 Tonare — tokens e componentes de interface.
 Layout: barra de navegação, hero com título serifado e arte decorativa à direita, cartão de
-upload + cartão de exemplos lado a lado. Carregado por scripts/demo_app.py via css=.
+upload + cartão de exemplos lado a lado. Carregado por scripts/frontend/demo_app.py via css=.
 */
 
 :root {

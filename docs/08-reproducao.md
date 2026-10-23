@@ -108,7 +108,7 @@ validação bate com a salva no checkpoint (para se divergir). As curvas de trei
 ## 7. Demonstração
 
 ```bash
-./.venv/Scripts/python.exe scripts/demo_app.py
+./.venv/Scripts/python.exe scripts/frontend/demo_app.py
 ```
 
 Interface local (Gradio) em `http://127.0.0.1:7860`; usa `model_resnet50_baseline_v7.pt` (versão no topo do
