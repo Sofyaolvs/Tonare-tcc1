@@ -38,7 +38,7 @@
 
 ### Uso
 14. **Não é dispositivo médico, não foi validado clinicamente e não houve estudo prospectivo.** A demonstração
-    (`scripts/demo_app.py`) diz isso na própria interface.
+    (`scripts/frontend/demo_app.py`) diz isso na própria interface.
 15. **Licenças:** os termos do ISIC 2020 e dos atlas do Fitzpatrick17k não foram verificados; os demais são de uso
     acadêmico/não comercial.
 

@@ -238,11 +238,11 @@ python scripts/evaluate_milk10k.py       # requer data/raw/milk10k/ (ver acima)
 ## Interface de demonstração
 
 ```bash
-python scripts/demo_app.py
+python scripts/frontend/demo_app.py
 ```
 Abre em `http://127.0.0.1:7860`. Interface local (Gradio) para testar o classificador com uma
 foto solta na tela ou um dos 6 casos de exemplo em `data/demo_examples/`. Estilo em
-[`scripts/tonare.css`](scripts/tonare.css).
+[`scripts/frontend/tonare.css`](scripts/frontend/tonare.css).
 Usa `data/processed/model_resnet50_baseline_v7.pt` (versão em `CHECKPOINT_VERSION`, no topo do script; ver Sprint 2).
 Os 6 exemplos são do teste do HAM10000 e foram escolhidos com a v2: com a v7, 5 de 6 estão corretos
 (os 3 melanomas, casos 1, 3 e 5, são marcados como suspeitos; o nevo do caso 4 vira falso positivo com 21,6%).
