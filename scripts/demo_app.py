@@ -12,6 +12,7 @@ Depois abre http://127.0.0.1:7860 no navegador (o Gradio também tenta abrir soz
 
 from __future__ import annotations
 
+import base64
 from pathlib import Path
 
 import gradio as gr
@@ -25,6 +26,7 @@ CHECKPOINT_VERSION = "v7"
 CHECKPOINT_PATH = BASE_DIR / "data" / "processed" / f"model_resnet50_baseline_{CHECKPOINT_VERSION}.pt"
 EXAMPLES_DIR = BASE_DIR / "data" / "demo_examples"
 CSS_PATH = Path(__file__).resolve().parent / "tonare.css"
+HERO_IMAGE_PATH = Path(__file__).resolve().parent / "assets" / "hero_pele.jpg"
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
@@ -88,6 +90,7 @@ def render_result(prob: float, limiar: float) -> str:
         )
 
     pct = prob * 100
+    pct_fmt = f"{pct:.1f}".replace(".", ",")
     limiar_pct = limiar * 100
 
     return f"""
@@ -97,7 +100,7 @@ def render_result(prob: float, limiar: float) -> str:
         <div class="tn-pill {estado}">{pill_texto}</div>
       </div>
       <div>
-        <div class="tn-result-number" style="color:{cor}">{pct:.1f}%</div>
+        <div class="tn-result-number" style="color:{cor}">{pct_fmt}%</div>
         <div class="tn-result-number-label">probabilidade estimada de melanoma</div>
       </div>
       <div>
@@ -116,38 +119,118 @@ def render_result(prob: float, limiar: float) -> str:
     """
 
 
-UPLOAD_ICON = (
-    '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
-    'stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+def _icon(paths: str, size: int) -> str:
+    return (
+        f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+        'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        f"{paths}</svg>"
+    )
+
+
+_UPLOAD_PATHS = (
     '<path d="M12 15V4"></path><path d="M7.5 8.5 12 4l4.5 4.5"></path>'
-    '<path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"></path></svg>'
+    '<path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"></path>'
 )
-
-HEADER_HTML = f"""
-<div class="tn-header">
-  <div class="tn-header-left">
-    <div class="tn-kicker">Triagem de melanoma por imagem</div>
-    <h1 class="tn-title">Tonare</h1>
-    <p class="tn-subtitle">Envie uma fotografia de uma lesão de pele para estimar a probabilidade de melanoma.</p>
-  </div>
-  <div class="tn-aviso">Demonstração de pesquisa (TCC) — não é um dispositivo médico. Ferramenta de triagem e apoio à decisão, nunca de diagnóstico.</div>
-</div>
-"""
-
-PLACEHOLDER_HTML = '<div class="tn-placeholder">Envie uma foto ou escolha um exemplo para ver a análise.</div>'
+_IMAGE_PATHS = (
+    '<rect x="3.5" y="3.5" width="17" height="17" rx="2.5"></rect><circle cx="9" cy="9" r="1.6"></circle>'
+    '<path d="m20.5 15-4.5-4.5L5.5 20.5"></path>'
+)
+_INFO_PATHS = '<circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 7.6v.1"></path>'
 
 EXAMPLE_FILES = sorted(EXAMPLES_DIR.glob("*.jpg")) if EXAMPLES_DIR.exists() else []
 GALLERY_ITEMS = [(str(p), f"Exemplo {i + 1:02d}") for i, p in enumerate(EXAMPLE_FILES)]
 
 
+def _hero_image_uri() -> str:
+    """Foto decorativa do topo, embutida em base64 (não depende de servir arquivo)."""
+    if not HERO_IMAGE_PATH.exists():
+        return ""
+    return "data:image/jpeg;base64," + base64.b64encode(HERO_IMAGE_PATH.read_bytes()).decode("ascii")
+
+
+_HERO_URI = _hero_image_uri()
+_HERO_PHOTO = f'<div class="tn-hero-photo" style="background-image:url({_HERO_URI})"></div>' if _HERO_URI else ""
+
+HEADER_HTML = f"""
+<nav class="tn-nav">
+  <a class="tn-logo" href="#">Tonare</a>
+  <div class="tn-nav-links">
+    <a href="#como-funciona">Como funciona</a>
+    <a class="tn-nav-pill" href="#sobre">Sobre o projeto</a>
+  </div>
+</nav>
+<section class="tn-hero">
+  <div class="tn-hero-art" aria-hidden="true">
+    <div class="tn-hero-blob"></div>
+    {_HERO_PHOTO}
+    <svg class="tn-hero-lines" viewBox="0 0 600 520" fill="none" preserveAspectRatio="none">
+      <path d="M150 0 C 80 120, 90 260, 260 300 S 520 360, 600 470"></path>
+      <path d="M40 330 C 140 250, 300 260, 380 340"></path>
+    </svg>
+  </div>
+  <div class="tn-kicker">Triagem de pele por imagem</div>
+  <h1 class="tn-title">Um novo olhar para<br>o cuidado com a <em>pele.</em></h1>
+  <p class="tn-subtitle">Envie uma imagem para iniciar a triagem.</p>
+</section>
+"""
+
+UPLOAD_HEAD_HTML = f"""
+<div class="tn-card-head">
+  <span class="tn-icon-badge">{_icon(_UPLOAD_PATHS, 26)}</span>
+  <h2>Envie sua fotografia</h2>
+</div>
+"""
+
+# Desenhado por cima do gr.Image, que continua por baixo recebendo o clique e o arrastar.
+DROP_OVERLAY_HTML = f"""
+<div class="tn-drop-content">
+  <span class="tn-drop-icon">{_icon(_UPLOAD_PATHS, 44)}</span>
+  <span class="tn-drop-title">Arraste sua imagem aqui</span>
+  <span class="tn-drop-or">ou</span>
+  <span class="tn-drop-btn">Selecionar imagem</span>
+  <span class="tn-drop-help">Formatos aceitos: JPG, JPEG, PNG &nbsp;•&nbsp; Tamanho máximo: 10 MB</span>
+</div>
+"""
+
+EXAMPLES_HEAD_HTML = f"""
+<div class="tn-card-head">
+  <span class="tn-icon-badge">{_icon(_IMAGE_PATHS, 24)}</span>
+  <div>
+    <h2>Experimente um exemplo</h2>
+    <p>Clique em uma imagem para testar a ferramenta.</p>
+  </div>
+</div>
+"""
+
+AVISO_HTML = f"""
+<div class="tn-aviso">
+  {_icon(_INFO_PATHS, 22)}
+  <span>Protótipo de pesquisa (TCC). Apoio à triagem;<br>não substitui avaliação médica.</span>
+</div>
+"""
+
+INFO_HTML = """
+<section class="tn-info">
+  <div id="como-funciona" class="tn-info-item">
+    <div class="tn-kicker">Como funciona</div>
+    <p>Uma rede neural convolucional (ResNet-50 com transfer learning) analisa a imagem da lesão e estima a
+    probabilidade de melanoma. Quando ela fica no limiar de decisão ou acima dele (limiar escolhido na
+    validação), a lesão é sinalizada como suspeita.</p>
+  </div>
+  <div id="sobre" class="tn-info-item">
+    <div class="tn-kicker">Sobre o projeto</div>
+    <p>Trabalho de Conclusão de Curso sobre triagem de melanoma por imagem, com análise de equidade do modelo
+    entre tons de pele. É uma ferramenta de apoio à triagem, não um dispositivo médico nem um diagnóstico.</p>
+  </div>
+</section>
+"""
+
+PLACEHOLDER_HTML = '<div class="tn-placeholder">Envie uma foto ou escolha um exemplo para ver a análise.</div>'
+
+
 def on_image_change(path: str | None):
     tem_imagem = bool(path)
-    nome = f"<span>{Path(path).name}</span>" if tem_imagem else ""
-    return (
-        nome,
-        gr.update(interactive=tem_imagem),
-        gr.update(interactive=tem_imagem),
-    )
+    return gr.update(interactive=tem_imagem), gr.update(visible=tem_imagem)
 
 
 def on_analisar(path: str | None):
@@ -162,9 +245,8 @@ def on_analisar(path: str | None):
 def on_trocar():
     return (
         None,
-        "",
         gr.update(interactive=False),
-        gr.update(interactive=False),
+        gr.update(visible=False),
         gr.update(visible=True),
         gr.update(visible=False),
     )
@@ -175,42 +257,56 @@ def on_gallery_select(evt: gr.SelectData):
 
 
 CSS = CSS_PATH.read_text(encoding="utf-8")
+# A paleta só foi desenhada em modo claro: impede o Gradio de trocar para o tema escuro do sistema.
+# Sem internet as fontes caem para os fallbacks definidos em tonare.css.
+HEAD = (
+    "<script>new MutationObserver(() => document.body && document.body.classList.remove('dark'))"
+    ".observe(document.documentElement, {subtree: true, attributes: true, attributeFilter: ['class']});</script>"
+    '<link rel="preconnect" href="https://fonts.googleapis.com">'
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;'
+    '1,6..72,400&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600&display=swap">'
+)
 
 with gr.Blocks(title="Tonare") as demo:
-    gr.HTML(HEADER_HTML)
+    with gr.Column(elem_classes="tn-page"):
+        gr.HTML(HEADER_HTML, elem_classes="tn-header-block")
 
-    with gr.Row(elem_classes="tn-main"):
-        with gr.Column(elem_classes="tn-col-primary"):
-            with gr.Column(elem_classes=["tn-card", "tn-card--elevated"]):
-                gr.HTML('<p class="tn-card-title">Fotografia da lesão</p>')
-                entrada = gr.Image(type="filepath", show_label=False, elem_classes=["tn-dropzone", "tn-photo"])
-                with gr.Row(elem_classes="tn-photo-footer"):
-                    nome_arquivo = gr.HTML("")
-                    with gr.Row(elem_classes="tn-btn-row"):
-                        botao_trocar = gr.Button("Trocar imagem", elem_classes="tn-btn-secondary", interactive=False)
-                        botao_analisar = gr.Button("Analisar", elem_classes="tn-btn-primary", interactive=False)
+        with gr.Row(elem_classes="tn-main"):
+            with gr.Column(elem_classes="tn-col-primary"):
+                with gr.Column(elem_classes=["tn-card", "tn-card--elevated", "tn-upload-card"]):
+                    gr.HTML(UPLOAD_HEAD_HTML)
+                    with gr.Column(elem_classes="tn-dropwrap"):
+                        entrada = gr.Image(
+                            type="filepath", show_label=False, sources=["upload"],
+                            elem_classes=["tn-dropzone", "tn-photo"],
+                        )
+                        gr.HTML(DROP_OVERLAY_HTML, elem_classes="tn-drop-overlay")
+                    with gr.Row(elem_classes="tn-photo-footer"):
+                        botao_trocar = gr.Button("Trocar imagem", elem_classes="tn-btn-secondary", visible=False)
+                        botao_analisar = gr.Button("Analisar imagem", elem_classes="tn-btn-primary", interactive=False)
 
-        with gr.Column(elem_classes="tn-col-aside"):
-            with gr.Column(visible=True) as exemplos_group:
-                with gr.Column(elem_classes="tn-card"):
-                    gr.HTML(
-                        '<div class="tn-card-heading"><h2>Exemplos</h2>'
-                        '<p>Clique em uma imagem para testar a ferramenta.</p></div>'
-                    )
-                    galeria = gr.Gallery(
-                        value=GALLERY_ITEMS, columns=3, show_label=False, allow_preview=False,
-                        elem_classes="tn-gallery", object_fit="cover",
-                    )
-            with gr.Column(visible=False) as resultado_group:
-                resultado_html = gr.HTML(PLACEHOLDER_HTML)
+            with gr.Column(elem_classes="tn-col-aside"):
+                with gr.Column(visible=True) as exemplos_group:
+                    with gr.Column(elem_classes=["tn-card", "tn-card--elevated"]):
+                        gr.HTML(EXAMPLES_HEAD_HTML)
+                        galeria = gr.Gallery(
+                            value=GALLERY_ITEMS, columns=3, show_label=False, allow_preview=False,
+                            elem_classes="tn-gallery", object_fit="cover", height="auto",
+                        )
+                        gr.HTML(AVISO_HTML)
+                with gr.Column(visible=False) as resultado_group:
+                    resultado_html = gr.HTML(PLACEHOLDER_HTML)
 
-    entrada.change(on_image_change, inputs=entrada, outputs=[nome_arquivo, botao_analisar, botao_trocar])
+        gr.HTML(INFO_HTML)
+
+    entrada.change(on_image_change, inputs=entrada, outputs=[botao_analisar, botao_trocar])
     botao_analisar.click(on_analisar, inputs=entrada, outputs=[resultado_html, exemplos_group, resultado_group])
     botao_trocar.click(
         on_trocar, inputs=None,
-        outputs=[entrada, nome_arquivo, botao_analisar, botao_trocar, exemplos_group, resultado_group],
+        outputs=[entrada, botao_analisar, botao_trocar, exemplos_group, resultado_group],
     )
     galeria.select(on_gallery_select, inputs=None, outputs=entrada)
 
 if __name__ == "__main__":
-    demo.launch(inbrowser=True, css=CSS, theme=gr.themes.Base())
+    demo.launch(inbrowser=True, css=CSS, head=HEAD, theme=gr.themes.Base())
