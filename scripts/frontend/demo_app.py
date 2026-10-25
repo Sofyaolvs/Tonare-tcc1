@@ -1,9 +1,9 @@
 """
-Interface de demonstração do Tonare — pra mostrar ao vivo no pitch.
+Interface de demonstração do Tonare — plataforma de APOIO À DECISÃO CLÍNICA (uso por profissionais de saúde).
 
-Implementa a especificação de design fechada com a IA de design (paleta, tipografia,
-layout de 2 colunas, cartão de resultado com barra de probabilidade e marcador de limiar).
-Ver scripts/frontend/tonare.css para os tokens e classes.
+Mantém a identidade visual do design (paleta, tipografia, navegação, hero e cartões; ver
+scripts/frontend/tonare.css), com conteúdo voltado ao profissional: faixa de risco em vez de "sim ou não",
+aviso do tipo de imagem, estatísticas da faixa no teste interno, desempenho e limitações do modelo.
 
 Uso:
     python scripts/frontend/demo_app.py
@@ -55,66 +55,115 @@ def load_model() -> tuple[torch.nn.Module, float]:
     return model, float(ck["threshold"])
 
 
-MODEL, THRESHOLD = load_model()  # THRESHOLD é a constante configurável pedida na especificação
-print(f"Modelo carregado. Limiar de decisão (escolhido na validação): {THRESHOLD:.2f}")
+MODEL, THRESHOLD = load_model()
+print(f"Modelo carregado ({CHECKPOINT_VERSION}). Limiar da meta de sensibilidade 0,90 (escolhido na validação): {THRESHOLD:.2f}")
 
 
 def predict(image: PILImage.Image) -> float:
-    """predict(img) -> probabilidade de melanoma (0 a 1)."""
+    """predict(img) -> pontuação do modelo para melanoma (0 a 1). NÃO é uma probabilidade calibrada."""
     with torch.no_grad():
         x = preprocess(image).unsqueeze(0)
         return F.softmax(MODEL(x), dim=1)[0, 1].item()
 
 
-def render_result(prob: float, limiar: float) -> str:
-    """Monta o HTML do cartão de resultado a partir da probabilidade e do limiar."""
-    suspeito = prob >= limiar
-    estado = "is-suspeito" if suspeito else "is-benigno"
-    pill_texto = "Suspeito de melanoma" if suspeito else "Padrão de nevo benigno"
-    cor = "var(--tn-sus)" if suspeito else "var(--tn-ben)"
+# ----------------------------------------------------------------------------------------------
+# Faixas de risco
+# Cortes: 0,05 = limiar da meta de sensibilidade 0,95 na validação da v7 (modo "sensível");
+#         THRESHOLD (0,15 na v7) = limiar da meta 0,90 na validação (modo "equilibrado");
+#         0,50 = limiar padrão. Os cortes e as estatísticas abaixo valem para a v7: recalcular ao trocar o checkpoint.
+# ----------------------------------------------------------------------------------------------
+LIMIAR_SENSIVEL = 0.05
+LIMIAR_PADRAO = 0.50
+BAND_EDGES = (LIMIAR_SENSIVEL, THRESHOLD, LIMIAR_PADRAO)
+TESTE_INTERNO_PREVALENCIA = "14%"  # fração de melanomas no teste interno (HAM10000, dermatoscopia, 1.166 lesões)
 
-    if suspeito:
-        orientacao = "Recomenda-se encaminhamento para avaliação dermatológica."
-        limiar_fmt = f"{limiar:.2f}".replace(".", ",")
-        legenda = (
-            f"Limiar de decisão: {limiar_fmt}. Probabilidades iguais ou acima desse valor são "
-            "classificadas como suspeitas. Resultado de triagem — não substitui avaliação médica."
+# nome, classe css, conduta sugerida, (% das lesões da faixa que eram melanoma, % dos melanomas que caíram na faixa)
+BANDS = [
+    ("Baixa", "is-b1",
+     "O modelo não sinaliza a lesão. Isso não exclui malignidade: manter a avaliação clínica habitual.",
+     (0.7, 3.0)),
+    ("Média", "is-b2",
+     "Zona intermediária. Considerar reavaliação dermatoscópica, comparação com imagens prévias ou revisão por especialista.",
+     (13.5, 10.9)),
+    ("Alta", "is-b3",
+     "Considerar dermatoscopia detalhada e avaliação especializada; a indicação de biópsia segue o julgamento clínico.",
+     (19.5, 20.6)),
+    ("Muito alta", "is-b4",
+     "Alta suspeita pelo modelo. Priorizar avaliação especializada e considerar biópsia, conforme o julgamento clínico.",
+     (62.8, 65.5)),
+]
+
+RESOLUCAO_MINIMA = 150  # lado mínimo (px) abaixo do qual avisamos; a imagem é reduzida a 224x224 pelo modelo
+
+
+def faixa_de_risco(score: float) -> int:
+    for i, edge in enumerate(BAND_EDGES):
+        if score < edge:
+            return i
+    return len(BAND_EDGES)
+
+
+def _fmt(x: float, casas: int = 1) -> str:
+    return f"{x:.{casas}f}".replace(".", ",")
+
+
+def render_result(score: float, tamanho: tuple[int, int], arquivo: str) -> str:
+    """Monta o HTML do cartão de resultado para o profissional de saúde."""
+    i = faixa_de_risco(score)
+    nome, classe, conduta, (pct_na_faixa, pct_dos_mel) = BANDS[i]
+    pct = score * 100
+
+    zonas = []
+    inicio = 0.0
+    for k, edge in enumerate(list(BAND_EDGES) + [1.0]):
+        zonas.append(f'<div class="tn-zone is-b{k + 1}" style="left:{inicio * 100:.2f}%;width:{(edge - inicio) * 100:.2f}%"></div>')
+        inicio = edge
+    ticks = "".join(
+        f'<span class="tn-tick" style="left:{e * 100:.1f}%">{_fmt(e * 100, 0)}%</span>' for e in BAND_EDGES
+    )
+
+    avisos = []
+    if min(tamanho) < RESOLUCAO_MINIMA:
+        avisos.append(
+            f"<strong>Baixa resolução</strong> ({tamanho[0]}×{tamanho[1]} px). A estimativa pode ser pouco confiável."
+        )
+    bloco_avisos = "".join(f'<div class="tn-warn">{a}</div>' for a in avisos)
+
+    if CHECKPOINT_VERSION == "v7":
+        estatistica = (
+            f'<div class="tn-result-stat">No teste interno do modelo (dermatoscopia, {TESTE_INTERNO_PREVALENCIA} de melanomas), '
+            f"<strong>{_fmt(pct_na_faixa)}%</strong> das lesões desta faixa eram melanoma, e a faixa reuniu "
+            f"<strong>{_fmt(pct_dos_mel)}%</strong> de todos os melanomas.</div>"
         )
     else:
-        orientacao = "Sem sinais de suspeita neste limiar. Mantenha o acompanhamento de rotina da pele."
-        limiar_fmt = f"{limiar:.2f}".replace(".", ",")
-        legenda = (
-            f"Limiar de decisão: {limiar_fmt}. Probabilidades abaixo desse valor são "
-            "classificadas como padrão benigno. Em caso de mudança de cor, forma ou tamanho, "
-            "procure um dermatologista."
-        )
+        estatistica = ""
 
-    pct = prob * 100
-    pct_fmt = f"{pct:.1f}".replace(".", ",")
-    limiar_pct = limiar * 100
+    registro = (
+        f"Registro: modelo {CHECKPOINT_VERSION} · dermatoscopia · pontuação {_fmt(pct)}% · faixa {nome.lower()} · "
+        f"cortes {' / '.join(_fmt(e * 100, 0) + '%' for e in BAND_EDGES)} · {arquivo}"
+    )
 
     return f"""
     <div class="tn-card tn-card--elevated tn-result">
       <div class="tn-result-head">
-        <div class="tn-result-eyebrow">Resultado da análise</div>
-        <div class="tn-pill {estado}">{pill_texto}</div>
+        <div class="tn-result-eyebrow">Estimativa do modelo</div>
+        <div class="tn-pill {classe}">Faixa de risco {nome.lower()}</div>
       </div>
       <div>
-        <div class="tn-result-number" style="color:{cor}">{pct_fmt}%</div>
-        <div class="tn-result-number-label">probabilidade estimada de melanoma</div>
+        <div class="tn-result-number {classe}">{_fmt(pct)}%</div>
+        <div class="tn-result-number-label">pontuação do modelo para melanoma (não é uma probabilidade calibrada)</div>
       </div>
-      <div>
-        <div class="tn-bar-track {estado}">
-          <div class="tn-bar-fill {estado}" style="width:{pct:.2f}%"></div>
-          <div class="tn-bar-marker" style="left:{limiar_pct:.2f}%"></div>
-        </div>
-        <div class="tn-bar-labels">
-          <span>0%</span><span>limiar {limiar_fmt}</span><span>100%</span>
-        </div>
+      <div class="tn-bar-wrap">
+        <div class="tn-bar-track">{''.join(zonas)}<div class="tn-bar-marker" style="left:{pct:.2f}%"></div></div>
+        <div class="tn-bar-ticks">{ticks}</div>
       </div>
+      {bloco_avisos}
       <div class="tn-divider"></div>
-      <div class="tn-result-orientacao">{orientacao}</div>
-      <div class="tn-result-caption">{legenda}</div>
+      <div class="tn-result-eyebrow">Conduta a considerar</div>
+      <div class="tn-result-orientacao">{conduta}</div>
+      {estatistica}
+      <div class="tn-result-caption">Apoio à decisão clínica: não substitui o exame clínico nem a histopatologia. Software de pesquisa (TCC), não é dispositivo médico aprovado.</div>
+      <div class="tn-result-registro">{registro}</div>
     </div>
     """
 
@@ -138,6 +187,8 @@ _IMAGE_PATHS = (
 _INFO_PATHS = '<circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 7.6v.1"></path>'
 
 EXAMPLE_FILES = sorted(EXAMPLES_DIR.glob("*.jpg")) if EXAMPLES_DIR.exists() else []
+
+
 GALLERY_ITEMS = [(str(p), f"Exemplo {i + 1:02d}") for i, p in enumerate(EXAMPLE_FILES)]
 
 
@@ -156,7 +207,7 @@ HEADER_HTML = f"""
   <a class="tn-logo" href="#">Tonare</a>
   <div class="tn-nav-links">
     <a href="#como-funciona">Como funciona</a>
-    <a class="tn-nav-pill" href="#sobre">Sobre o projeto</a>
+    <a class="tn-nav-pill" href="#desempenho">Desempenho</a>
   </div>
 </nav>
 <section class="tn-hero">
@@ -168,16 +219,19 @@ HEADER_HTML = f"""
       <path d="M40 330 C 140 250, 300 260, 380 340"></path>
     </svg>
   </div>
-  <div class="tn-kicker">Triagem de pele por imagem</div>
-  <h1 class="tn-title">Um novo olhar para<br>o cuidado com a <em>pele.</em></h1>
-  <p class="tn-subtitle">Envie uma imagem para iniciar a triagem.</p>
+  <div class="tn-kicker">Apoio à decisão clínica</div>
+  <h1 class="tn-title">Triagem de <em>melanoma</em><br>por imagem.</h1>
+  <p class="tn-subtitle">Envie a dermatoscopia da lesão para obter a estimativa de risco do modelo.</p>
 </section>
 """
 
 UPLOAD_HEAD_HTML = f"""
 <div class="tn-card-head">
   <span class="tn-icon-badge">{_icon(_UPLOAD_PATHS, 26)}</span>
-  <h2>Envie sua fotografia</h2>
+  <div>
+    <h2>Imagem da lesão</h2>
+    <p>Dermatoscopia de uma única lesão.</p>
+  </div>
 </div>
 """
 
@@ -185,10 +239,10 @@ UPLOAD_HEAD_HTML = f"""
 DROP_OVERLAY_HTML = f"""
 <div class="tn-drop-content">
   <span class="tn-drop-icon">{_icon(_UPLOAD_PATHS, 44)}</span>
-  <span class="tn-drop-title">Arraste sua imagem aqui</span>
+  <span class="tn-drop-title">Arraste a imagem aqui</span>
   <span class="tn-drop-or">ou</span>
   <span class="tn-drop-btn">Selecionar imagem</span>
-  <span class="tn-drop-help">Formatos aceitos: JPG, JPEG, PNG &nbsp;•&nbsp; Tamanho máximo: 10 MB</span>
+  <span class="tn-drop-help">Formatos aceitos: JPG, JPEG, PNG</span>
 </div>
 """
 
@@ -196,8 +250,8 @@ EXAMPLES_HEAD_HTML = f"""
 <div class="tn-card-head">
   <span class="tn-icon-badge">{_icon(_IMAGE_PATHS, 24)}</span>
   <div>
-    <h2>Experimente um exemplo</h2>
-    <p>Clique em uma imagem para testar a ferramenta.</p>
+    <h2>Casos de exemplo</h2>
+    <p>Dermatoscopias sorteadas do conjunto de teste (não entraram no treino). Clique para carregar.</p>
   </div>
 </div>
 """
@@ -205,7 +259,7 @@ EXAMPLES_HEAD_HTML = f"""
 AVISO_HTML = f"""
 <div class="tn-aviso">
   {_icon(_INFO_PATHS, 22)}
-  <span>Protótipo de pesquisa (TCC). Apoio à triagem;<br>não substitui avaliação médica.</span>
+  <span>Protótipo de pesquisa (TCC). Apoio à decisão do profissional de saúde; não é dispositivo médico e não substitui a avaliação clínica.</span>
 </div>
 """
 
@@ -213,19 +267,20 @@ INFO_HTML = """
 <section class="tn-info">
   <div id="como-funciona" class="tn-info-item">
     <div class="tn-kicker">Como funciona</div>
-    <p>Uma rede neural convolucional (ResNet-50 com transfer learning) analisa a imagem da lesão e estima a
-    probabilidade de melanoma. Quando ela fica no limiar de decisão ou acima dele (limiar escolhido na
-    validação), a lesão é sinalizada como suspeita.</p>
+    <p>Uma rede neural convolucional (ResNet-50, transfer learning) analisa a imagem e devolve uma <strong>pontuação</strong>
+    de 0 a 100% para melanoma contra nevo. A pontuação é agrupada em quatro <strong>faixas de risco</strong>; os cortes vêm da
+    validação do modelo (sensibilidade de 95% e de 90%) e do limiar padrão de 50%. O modelo foi treinado com HAM10000,
+    MILK10k, BCN20000 e Fitzpatrick17k (tons I–IV).</p>
   </div>
-  <div id="sobre" class="tn-info-item">
-    <div class="tn-kicker">Sobre o projeto</div>
-    <p>Trabalho de Conclusão de Curso sobre triagem de melanoma por imagem, com análise de equidade do modelo
-    entre tons de pele. É uma ferramenta de apoio à triagem, não um dispositivo médico nem um diagnóstico.</p>
+  <div id="desempenho" class="tn-info-item">
+    <div class="tn-kicker">Desempenho</div>
+    <p>Em dermatoscopia (teste interno, HAM10000) a AUC é 0,92, com sensibilidade 0,86 e especificidade 0,80 no corte de 15%.
+    Em testes externos independentes a AUC fica em 0,79–0,93.</p>
   </div>
 </section>
 """
 
-PLACEHOLDER_HTML = '<div class="tn-placeholder">Envie uma foto ou escolha um exemplo para ver a análise.</div>'
+PLACEHOLDER_HTML = '<div class="tn-placeholder">Envie uma imagem ou escolha um exemplo para ver a estimativa.</div>'
 
 
 def on_image_change(path: str | None):
@@ -237,8 +292,8 @@ def on_analisar(path: str | None):
     if not path:
         return gr.update(), gr.update(visible=True), gr.update(visible=False)
     img = PILImage.open(path)
-    prob = predict(img)
-    html = render_result(prob, THRESHOLD)
+    score = predict(img)
+    html = render_result(score, img.size, Path(path).name)
     return html, gr.update(visible=False), gr.update(visible=True)
 
 
@@ -260,8 +315,14 @@ CSS = CSS_PATH.read_text(encoding="utf-8")
 # A paleta só foi desenhada em modo claro: impede o Gradio de trocar para o tema escuro do sistema.
 # Sem internet as fontes caem para os fallbacks definidos em tonare.css.
 HEAD = (
-    "<script>new MutationObserver(() => document.body && document.body.classList.remove('dark'))"
-    ".observe(document.documentElement, {subtree: true, attributes: true, attributeFilter: ['class']});</script>"
+    # Só mexe na classe quando 'dark' realmente existe e vigia apenas o <body>. Antes o vigia olhava a página inteira e
+    # chamava classList.remove('dark') a cada mudança de classe; o próprio remove() reescreve o atributo `class` do body e
+    # dispara de novo o vigia, em laço infinito que congela a aba (ao colocar uma imagem, o Gradio muda várias classes).
+    "<script>document.addEventListener('DOMContentLoaded', () => {"
+    "const tiraDark = () => { if (document.body.classList.contains('dark')) document.body.classList.remove('dark'); };"
+    "tiraDark();"
+    "new MutationObserver(tiraDark).observe(document.body, {attributes: true, attributeFilter: ['class']});"
+    "});</script>"
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
     '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;'
