@@ -244,9 +244,11 @@ Abre em `http://127.0.0.1:7860`. Interface local (Gradio) para testar o classifi
 foto solta na tela ou um dos 6 casos de exemplo em `data/demo_examples/`. Estilo em
 [`scripts/frontend/tonare.css`](scripts/frontend/tonare.css).
 Usa `data/processed/model_resnet50_baseline_v7.pt` (versão em `CHECKPOINT_VERSION`, no topo do script; ver Sprint 2).
-Os 6 exemplos são do teste do HAM10000 e foram escolhidos com a v2: com a v7, 5 de 6 estão corretos
-(os 3 melanomas, casos 1, 3 e 5, são marcados como suspeitos; o nevo do caso 4 vira falso positivo com 21,6%).
-São 6 imagens ilustrativas, sem valor estatístico.
+Os 6 exemplos foram **sorteados** (semente fixa, `python scripts/select_demo_examples.py [semente]`) entre imagens que nunca
+entraram no treino: 4 dermatoscopias do teste do HAM10000 (2 melanomas e 2 nevos) e 2 fotografias clínicas do PAD-UFES-20
+(1 melanoma e 1 nevo), semente 42. Não foram escolhidas pelo acerto. A origem, o rótulo real e a pontuação de cada uma estão
+em `data/demo_examples/exemplos.csv`. São 6 imagens ilustrativas, sem valor estatístico. A interface não pergunta o tipo de
+imagem e é pensada para dermatoscopia: o modelo é menos confiável em fotografia clínica (exemplos 01 e 05).
 
 ## Estrutura
 
