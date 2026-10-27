@@ -237,7 +237,12 @@ python scripts/evaluate_milk10k.py       # requer data/raw/milk10k/ (ver acima)
 
 ## Interface de demonstração
 
+Em qualquer máquina (Python 3.10+), depois de `git clone` — o checkpoint v7 e os 6 exemplos já vêm no repositório:
+
 ```bash
+python -m venv .venv
+.venv/Scripts/activate                  # Windows  (Linux/Mac: source .venv/bin/activate)
+pip install -r requirements-train.txt   # torch, torchvision e gradio
 python scripts/frontend/demo_app.py
 ```
 Abre em `http://127.0.0.1:7860`. Interface local (Gradio) para testar o classificador com uma
