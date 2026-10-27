@@ -12,10 +12,12 @@ data/raw/padufes20/
 data/raw/candidates/
 data/raw/fitzpatrick17k/
 data/processed*.zip
-data/processed/
+data/processed/*
 data/archive_fitzpatrick17k/
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+# Checkpoint usado pela interface de demonstracao (94 MB)
+!data/processed/model_resnet50_baseline_v7.pt
 
 # Artefatos de ambiente
 .DS_Store
