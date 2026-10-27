@@ -17,7 +17,7 @@ data/archive_fitzpatrick17k/
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 # Checkpoint usado pela interface de demonstracao (94 MB)
-!data/processed/model_resnet50_baseline_v7.pt
+# !data/processed/model_resnet50_baseline_v7.pt
 
 # Artefatos de ambiente
 .DS_Store
