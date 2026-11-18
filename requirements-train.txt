@@ -4,3 +4,6 @@
 # `import torch; print(torch.__version__)` e ajustar aqui se quiser reproduzir exatamente.
 torch==2.14.0
 torchvision==0.29.0
+
+# Interface de demonstração (scripts/frontend/demo_app.py)
+gradio==6.28.0

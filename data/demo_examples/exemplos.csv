@@ -1,0 +1,7 @@
+arquivo,modalidade,fonte,id_origem,rotulo_real,pontuacao_no_app,faixa_no_app
+exemplo_01.jpg,Fotografia clínica,PAD-UFES-20,PAT_486_929_274.png,mel,0.9817,muito alta
+exemplo_02.jpg,Dermatoscopia,HAM10000 (teste),ISIC_0031806,nv,0.0845,média
+exemplo_03.jpg,Dermatoscopia,HAM10000 (teste),ISIC_0024526,nv,0.0025,baixa
+exemplo_04.jpg,Dermatoscopia,HAM10000 (teste),ISIC_0034188,mel,0.5351,muito alta
+exemplo_05.jpg,Fotografia clínica,PAD-UFES-20,PAT_1364_1246_420.png,nv,0.0142,baixa
+exemplo_06.jpg,Dermatoscopia,HAM10000 (teste),ISIC_0026652,mel,0.9246,muito alta

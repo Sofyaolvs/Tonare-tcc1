@@ -3,13 +3,21 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
-# Dados (grandes, baixados via script — ver scripts/preprocess.py e scripts/prepare_ddi.py)
+# Dados (grandes, baixados via script — ver scripts/preprocess.py, scripts/prepare_ddi.py e scripts/prepare_isic2020.py)
 data/raw/ham10000/
 data/raw/ddi/
-data/processed/
+data/raw/isic2020/
+data/raw/milk10k/
+data/raw/padufes20/
+data/raw/candidates/
+data/raw/fitzpatrick17k/
+data/processed*.zip
+data/processed/*
 data/archive_fitzpatrick17k/
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+# Checkpoint usado pela interface de demonstracao (94 MB)
+# !data/processed/model_resnet50_baseline_v7.pt
 
 # Artefatos de ambiente
 .DS_Store

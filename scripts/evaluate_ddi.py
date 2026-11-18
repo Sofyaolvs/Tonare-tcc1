@@ -13,7 +13,8 @@ Métricas por faixa (com IC 95% por bootstrap dentro de cada faixa, pois os grup
   - sensibilidade e especificidade no limiar salvo no checkpoint (escolhido na validação do HAM10000)
 
 Uso:
-    python scripts/evaluate_ddi.py
+    python scripts/evaluate_ddi.py        # v2 (padrão)
+    python scripts/evaluate_ddi.py v5
 """
 
 from __future__ import annotations
@@ -32,11 +33,16 @@ if sys.stdout.encoding is None or sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-CHECKPOINT = BASE_DIR / "data" / "processed" / "model_resnet50_baseline.pt"
+# v2 = referência (recomendada, DDI interpretável); v3 = achado sobre generalização cross-modalidade
+# (ver memória do projeto). Nomes de arquivo explícitos de propósito - um checkpoint sem sufixo de
+# versão já causou um acidente aqui (uma corrida sobrescreveu/apagou a outra sem querer).
+CHECKPOINT_VERSION = sys.argv[1] if len(sys.argv) > 1 else "v2"
+_SUFFIX = "" if CHECKPOINT_VERSION == "v2" else f"_{CHECKPOINT_VERSION}"  # não sobrescreve as saídas da v2
+CHECKPOINT = BASE_DIR / "data" / "processed" / f"model_resnet50_baseline_{CHECKPOINT_VERSION}.pt"
 DDI_MANIFEST = BASE_DIR / "data" / "processed" / "ddi" / "ddi_manifest.csv"
 DDI_RAW_META = BASE_DIR / "data" / "raw" / "ddi" / "ddi_metadata.csv"
-PRED_PATH = BASE_DIR / "data" / "processed" / "ddi" / "ddi_predictions.csv"
-SUMMARY_PATH = BASE_DIR / "data" / "processed" / "ddi" / "ddi_fairness_summary.csv"
+PRED_PATH = BASE_DIR / "data" / "processed" / "ddi" / f"ddi_predictions{_SUFFIX}.csv"
+SUMMARY_PATH = BASE_DIR / "data" / "processed" / "ddi" / f"ddi_fairness_summary{_SUFFIX}.csv"
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
